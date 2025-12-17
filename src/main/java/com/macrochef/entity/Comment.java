@@ -1,36 +1,34 @@
 package com.macrochef.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // MANY COMMENTS → ONE RECIPE
-    @ManyToOne
-    @JoinColumn(name = "recipe_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "recipe_id")
     private Recipe recipe;
 
-    // MANY COMMENTS → ONE USER
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "comment_text", nullable = false, length = 500)
-    private String commentText;
+    private String text;
 
-    private Integer rating; // 1–5 (DB’de CHECK var)
+    @Column(nullable = false)
+    private int rating; // 1–5
 
-    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }
