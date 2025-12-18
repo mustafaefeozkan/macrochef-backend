@@ -3,14 +3,13 @@ package com.macrochef.service;
 import com.macrochef.dto.RecipeIngredientResponse;
 import com.macrochef.dto.RecipeRequest;
 import com.macrochef.dto.RecipeResponse;
+import com.macrochef.entity.Category;
 import com.macrochef.entity.Recipe;
 import com.macrochef.entity.RecipeIngredient;
 import com.macrochef.entity.User;
-import com.macrochef.repository.RecipeRepository;
-import com.macrochef.repository.UserRepository;
-import com.macrochef.entity.Category;
 import com.macrochef.repository.CategoryRepository;
-
+import com.macrochef.repository.RecipeRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,23 +21,22 @@ import java.util.List;
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
-    private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final UserService userService;
 
     // -------------------------
-    // CREATE
+    // CREATE (JWT)
     // -------------------------
-    public RecipeResponse createRecipe(RecipeRequest request, Long userId) {
+    public RecipeResponse createRecipe(RecipeRequest request) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = userService.getCurrentUser();
 
         Recipe recipe = new Recipe();
         recipe.setTitle(request.getTitle());
         recipe.setDescription(request.getDescription());
         recipe.setInstructions(request.getInstructions());
         recipe.setImageUrl(request.getImageUrl());
-        recipe.setUser(user);
+        recipe.setUser(currentUser);
 
         if (request.getCategoryId() != null) {
             Category category = categoryRepository
@@ -47,9 +45,7 @@ public class RecipeService {
             recipe.setCategory(category);
         }
 
-
         recipeRepository.save(recipe);
-
         return mapToResponse(recipe);
     }
 
@@ -79,13 +75,44 @@ public class RecipeService {
     }
 
     // -------------------------
-    // DELETE
+    // UPDATE (JWT)
     // -------------------------
-    public void deleteRecipe(Long id, Long userId) {
+    @Transactional
+    public RecipeResponse updateRecipe(Long recipeId, RecipeRequest request) {
+
+        User currentUser = userService.getCurrentUser();
+
+        Recipe recipe = getRecipeById(recipeId);
+
+        if (!recipe.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You cannot update someone else's recipe");
+        }
+
+        recipe.setTitle(request.getTitle());
+        recipe.setDescription(request.getDescription());
+        recipe.setInstructions(request.getInstructions());
+        recipe.setImageUrl(request.getImageUrl());
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            recipe.setCategory(category);
+        }
+
+        recipeRepository.save(recipe);
+        return mapToResponse(recipe);
+    }
+
+    // -------------------------
+    // DELETE (JWT)
+    // -------------------------
+    public void deleteRecipe(Long id) {
+
+        User currentUser = userService.getCurrentUser();
 
         Recipe recipe = getRecipeById(id);
 
-        if (!recipe.getUser().getId().equals(userId)) {
+        if (!recipe.getUser().getId().equals(currentUser.getId())) {
             throw new RuntimeException("You cannot delete someone else's recipe");
         }
 
@@ -145,14 +172,11 @@ public class RecipeService {
         res.setTotalProtein(totalProtein);
         res.setTotalCarbs(totalCarbs);
         res.setTotalFat(totalFat);
-
-
         res.setIngredients(ingredientResponses);
 
         if (recipe.getCategory() != null) {
             res.setCategoryName(recipe.getCategory().getName());
         }
-
 
         return res;
     }

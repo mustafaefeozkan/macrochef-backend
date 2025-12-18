@@ -3,7 +3,9 @@ package com.macrochef.service;
 import com.macrochef.dto.AuthResponse;
 import com.macrochef.dto.LoginRequest;
 import com.macrochef.dto.RegisterRequest;
+import com.macrochef.entity.Role;
 import com.macrochef.entity.User;
+import com.macrochef.repository.RoleRepository;
 import com.macrochef.repository.UserRepository;
 import com.macrochef.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +17,17 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    // --------------------
+    // REGISTER
+    // --------------------
     public AuthResponse register(RegisterRequest request) {
 
-        // email daha önce kullanılmış mı?
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return new AuthResponse("Email already exists", null);
+            throw new RuntimeException("Email already in use");
         }
 
         User user = new User();
@@ -30,21 +35,29 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
+
+        user.getRoles().add(userRole);
         userRepository.save(user);
 
-        return new AuthResponse("Registration successful", null);
+        String token = jwtUtil.generateToken(user.getId());
+
+        return new AuthResponse("Registration successful", token);
     }
 
+    // --------------------
+    // LOGIN
+    // --------------------
     public AuthResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElse(null);
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return new AuthResponse("Invalid credentials", null);
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
         }
 
-        // JWT token üret
         String token = jwtUtil.generateToken(user.getId());
 
         return new AuthResponse("Login successful", token);

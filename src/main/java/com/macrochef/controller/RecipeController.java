@@ -1,10 +1,13 @@
 package com.macrochef.controller;
 
+import com.macrochef.dto.AddIngredientToRecipeRequest; // Bu DTO sende var
+import com.macrochef.dto.RecipeIngredientResponse;
 import com.macrochef.dto.RecipeRequest;
 import com.macrochef.dto.RecipeResponse;
+import com.macrochef.service.RecipeIngredientService; // EKLENDİ
 import com.macrochef.service.RecipeService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,36 +18,57 @@ import java.util.List;
 public class RecipeController {
 
     private final RecipeService recipeService;
+    private final RecipeIngredientService recipeIngredientService;
 
-    // CREATE RECIPE (Authorization kaldırıldı)
+    // -------------------------
+    // TARİF OLUŞTURMA
+    // -------------------------
     @PostMapping
-    public RecipeResponse createRecipe(@RequestBody RecipeRequest request) {
-
-        // Şimdilik test amaçlı userId = 1
-        Long userId = 1L;
-
-        return recipeService.createRecipe(request, userId);
+    public ResponseEntity<RecipeResponse> createRecipe(@RequestBody RecipeRequest request) {
+        return ResponseEntity.ok(recipeService.createRecipe(request));
     }
 
-    // GET ALL RECIPES
+    // -------------------------
+    // LİSTELEME
+    // -------------------------
     @GetMapping
-    public List<RecipeResponse> getAllRecipes() {
-        return recipeService.getAllRecipes();
+    public ResponseEntity<List<RecipeResponse>> getAllRecipes() {
+        return ResponseEntity.ok(recipeService.getAllRecipes());
     }
 
-    // GET RECIPE BY ID
     @GetMapping("/{id}")
-    public RecipeResponse getRecipe(@PathVariable Long id) {
-        return recipeService.getRecipeResponseById(id);
+    public ResponseEntity<RecipeResponse> getRecipe(@PathVariable Long id) {
+        return ResponseEntity.ok(recipeService.getRecipeResponseById(id));
     }
 
-    // DELETE RECIPE (Authorization kaldırıldı)
+    // -------------------------
+    // GÜNCELLEME
+    // -------------------------
+    @PutMapping("/{id}")
+    public ResponseEntity<RecipeResponse> updateRecipe(
+            @PathVariable Long id,
+            @RequestBody RecipeRequest request
+    ) {
+        return ResponseEntity.ok(recipeService.updateRecipe(id, request));
+    }
+
+    // -------------------------
+    // SİLME
+    // -------------------------
     @DeleteMapping("/{id}")
-    public void deleteRecipe(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
+        recipeService.deleteRecipe(id);
+        return ResponseEntity.noContent().build(); // 204 No Content döner (Daha şık)
+    }
 
-        // Şimdilik userId = 1
-        Long userId = 1L;
-
-        recipeService.deleteRecipe(id, userId);
+    // -------------------------
+    // TARİFE MALZEME EKLEME
+    // -------------------------
+    @PostMapping("/{recipeId}/ingredients")
+    public ResponseEntity<RecipeIngredientResponse> addIngredient(
+            @PathVariable Long recipeId,
+            @RequestBody AddIngredientToRecipeRequest request
+    ) {
+        return ResponseEntity.ok(recipeIngredientService.addIngredient(recipeId, request));
     }
 }

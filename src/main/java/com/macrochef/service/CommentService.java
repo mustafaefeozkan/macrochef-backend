@@ -1,16 +1,16 @@
 package com.macrochef.service;
 
 import com.macrochef.dto.CommentRequest;
-import com.macrochef.dto.CommentResponse;
 import com.macrochef.entity.Comment;
 import com.macrochef.entity.Recipe;
 import com.macrochef.entity.User;
 import com.macrochef.repository.CommentRepository;
 import com.macrochef.repository.RecipeRepository;
-import com.macrochef.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,48 +19,55 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final RecipeRepository recipeRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public CommentResponse addComment(Long recipeId, Long userId, CommentRequest req) {
+    // -------------------------
+    // CREATE COMMENT (JWT)
+    // -------------------------
+    public Comment addComment(Long recipeId, CommentRequest request) {
 
-        if (req.getRating() < 1 || req.getRating() > 5) {
-            throw new RuntimeException("Rating must be between 1 and 5");
-        }
+        User currentUser = userService.getCurrentUser();
 
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not found"));
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
         Comment comment = new Comment();
         comment.setRecipe(recipe);
-        comment.setUser(user);
-        comment.setText(req.getText());
-        comment.setRating(req.getRating());
+        comment.setUser(currentUser);
+        comment.setText(request.getText());
+        comment.setRating(request.getRating());
+        comment.setCreatedAt(LocalDateTime.now());
 
-        commentRepository.save(comment);
-
-        return mapToResponse(comment);
+        return commentRepository.save(comment);
     }
 
-    public List<CommentResponse> getCommentsByRecipe(Long recipeId) {
-        Recipe recipe = recipeRepository.findById(recipeId)
+    // -------------------------
+    // READ COMMENTS BY RECIPE
+    // -------------------------
+    public List<Comment> getCommentsByRecipe(Long recipeId) {
+
+        // recipe var mı yok mu kontrolü (temiz API davranışı)
+        recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not found"));
 
-        return commentRepository.findByRecipe(recipe)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+        return commentRepository.findByRecipeId(recipeId);
     }
 
-    private CommentResponse mapToResponse(Comment comment) {
-        CommentResponse res = new CommentResponse();
-        res.setId(comment.getId());
-        res.setUsername(comment.getUser().getUsername());
-        res.setText(comment.getText());
-        res.setRating(comment.getRating());
-        res.setCreatedAt(comment.getCreatedAt().toString());
-        return res;
+    // -------------------------
+    // DELETE COMMENT (JWT + OWNERSHIP)
+    // -------------------------
+    @Transactional
+    public void deleteComment(Long commentId) {
+
+        User currentUser = userService.getCurrentUser();
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        if (!comment.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You cannot delete someone else's comment");
+        }
+
+        commentRepository.delete(comment);
     }
 }
