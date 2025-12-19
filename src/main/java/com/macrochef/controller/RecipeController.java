@@ -1,10 +1,10 @@
 package com.macrochef.controller;
 
-import com.macrochef.dto.AddIngredientToRecipeRequest; // Bu DTO sende var
+import com.macrochef.dto.AddIngredientToRecipeRequest;
 import com.macrochef.dto.RecipeIngredientResponse;
 import com.macrochef.dto.RecipeRequest;
 import com.macrochef.dto.RecipeResponse;
-import com.macrochef.service.RecipeIngredientService; // EKLENDİ
+import com.macrochef.service.RecipeIngredientService;
 import com.macrochef.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/recipes")
+@RequestMapping("/api/recipes") // DÜZELTME 1: React /api/recipes diye aradığı için burayı güncelledik
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173") // DÜZELTME 2: React'in (5173) buraya erişmesine izin verdik
 public class RecipeController {
 
     private final RecipeService recipeService;
@@ -33,6 +34,8 @@ public class RecipeController {
     // -------------------------
     @GetMapping
     public ResponseEntity<List<RecipeResponse>> getAllRecipes() {
+        // Konsola yazdıralım ki çalıştığını görelim
+        System.out.println("RecipeController: Tarifler isteniyor...");
         return ResponseEntity.ok(recipeService.getAllRecipes());
     }
 
@@ -58,7 +61,7 @@ public class RecipeController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
         recipeService.deleteRecipe(id);
-        return ResponseEntity.noContent().build(); // 204 No Content döner (Daha şık)
+        return ResponseEntity.noContent().build();
     }
 
     // -------------------------
@@ -71,4 +74,9 @@ public class RecipeController {
     ) {
         return ResponseEntity.ok(recipeIngredientService.addIngredient(recipeId, request));
     }
+    @GetMapping("/my-recipes")
+    public ResponseEntity<List<RecipeResponse>> getMyRecipes() {
+        return ResponseEntity.ok(recipeService.getMyRecipes());
+    }
+
 }

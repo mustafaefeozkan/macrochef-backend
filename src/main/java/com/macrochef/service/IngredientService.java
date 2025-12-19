@@ -3,9 +3,9 @@ package com.macrochef.service;
 import com.macrochef.dto.IngredientRequest;
 import com.macrochef.entity.Ingredient;
 import com.macrochef.repository.IngredientRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -15,7 +15,6 @@ public class IngredientService {
     private final ExternalApiService api;
 
     public Ingredient createIngredient(IngredientRequest req) {
-
         Ingredient ing = new Ingredient();
         ing.setName(req.getName());
 
@@ -28,5 +27,10 @@ public class IngredientService {
         ing = api.fillNutrition(ing);
 
         return repo.save(ing);
+    }
+
+
+    public List<Ingredient> searchIngredients(String name) {
+        return repo.findByNameContainingIgnoreCase(name);
     }
 }

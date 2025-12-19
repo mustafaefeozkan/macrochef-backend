@@ -1,5 +1,6 @@
 package com.macrochef.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -21,5 +22,6 @@ public class Category {
 
 
     @OneToMany(mappedBy = "category")
+    @JsonIgnore
     private List<Recipe> recipes;
 }

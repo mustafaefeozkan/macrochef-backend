@@ -1,11 +1,10 @@
 package com.macrochef.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class IngredientRequest {
+
     private String name;
     private Double calories100g;
     private Double protein100g;

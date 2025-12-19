@@ -1,13 +1,13 @@
 package com.macrochef.service;
 
+import com.macrochef.dto.RecipeIngredientRequest; // BU IMPORT ÖNEMLİ
 import com.macrochef.dto.RecipeIngredientResponse;
 import com.macrochef.dto.RecipeRequest;
 import com.macrochef.dto.RecipeResponse;
-import com.macrochef.entity.Category;
-import com.macrochef.entity.Recipe;
-import com.macrochef.entity.RecipeIngredient;
-import com.macrochef.entity.User;
+import com.macrochef.entity.*;
 import com.macrochef.repository.CategoryRepository;
+import com.macrochef.repository.IngredientRepository;
+import com.macrochef.repository.RecipeIngredientRepository;
 import com.macrochef.repository.RecipeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +23,10 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private final CategoryRepository categoryRepository;
     private final UserService userService;
+    private final IngredientRepository ingredientRepository;
+    private final RecipeIngredientRepository recipeIngredientRepository;
 
-    // -------------------------
-    // CREATE (JWT)
-    // -------------------------
+    @Transactional
     public RecipeResponse createRecipe(RecipeRequest request) {
 
         User currentUser = userService.getCurrentUser();
@@ -45,8 +45,40 @@ public class RecipeService {
             recipe.setCategory(category);
         }
 
-        recipeRepository.save(recipe);
-        return mapToResponse(recipe);
+        Recipe savedRecipe = recipeRepository.save(recipe);
+
+        // --- GÜNCELLENEN KISIM ---
+        if (request.getIngredients() != null && !request.getIngredients().isEmpty()) {
+            // Döngü değişkeni: RecipeIngredientRequest (Yeni oluşturduğumuz sınıf)
+            for (RecipeIngredientRequest ir : request.getIngredients()) {
+
+                // .getIngredientId() artık hata vermez çünkü RecipeIngredientRequest içinde var
+                Ingredient ingredient = ingredientRepository.findById(ir.getIngredientId())
+                        .orElseThrow(() -> new RuntimeException("Ingredient not found ID: " + ir.getIngredientId()));
+
+                RecipeIngredient ri = new RecipeIngredient();
+                ri.setRecipe(savedRecipe);
+                ri.setIngredient(ingredient);
+                ri.setAmountInGrams(ir.getAmountInGrams());
+
+                recipeIngredientRepository.save(ri);
+            }
+        }
+        // -------------------------
+
+        return mapToResponse(savedRecipe);
+    }
+
+    // -------------------------
+    // GET MY RECIPES (Logged-in User)
+    // -------------------------
+    public List<RecipeResponse> getMyRecipes() {
+        User currentUser = userService.getCurrentUser();
+
+        return recipeRepository.findByUserId(currentUser.getId())
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     // -------------------------
@@ -99,6 +131,9 @@ public class RecipeService {
             recipe.setCategory(category);
         }
 
+        // Not: Update sırasında malzeme listesini güncellemek daha karmaşıktır (silip yeniden ekleme vs.)
+        // Şimdilik temel bilgileri güncelliyoruz.
+
         recipeRepository.save(recipe);
         return mapToResponse(recipe);
     }
@@ -131,8 +166,17 @@ public class RecipeService {
 
         List<RecipeIngredientResponse> ingredientResponses = new ArrayList<>();
 
-        if (recipe.getIngredients() != null) {
-            for (RecipeIngredient ri : recipe.getIngredients()) {
+        // Malzeme listesini güvenli şekilde alalım
+        List<RecipeIngredient> ingredients = recipe.getIngredients();
+
+        // Eğer entity üzerindeki liste boşsa (Hibernate lazy load veya cache durumu),
+        // veritabanından manuel çekmeyi deneyebiliriz.
+        if (ingredients == null || ingredients.isEmpty()) {
+            ingredients = recipeIngredientRepository.findByRecipeId(recipe.getId());
+        }
+
+        if (ingredients != null) {
+            for (RecipeIngredient ri : ingredients) {
 
                 double factor = ri.getAmountInGrams() / 100.0;
 
@@ -165,8 +209,14 @@ public class RecipeService {
         res.setDescription(recipe.getDescription());
         res.setInstructions(recipe.getInstructions());
         res.setImageUrl(recipe.getImageUrl());
-        res.setCreatedAt(recipe.getCreatedAt().toString());
-        res.setCreatedBy(recipe.getUser().getUsername());
+
+        if (recipe.getCreatedAt() != null) {
+            res.setCreatedAt(recipe.getCreatedAt().toString());
+        }
+
+        if (recipe.getUser() != null) {
+            res.setCreatedBy(recipe.getUser().getUsername());
+        }
 
         res.setTotalCalories(totalCalories);
         res.setTotalProtein(totalProtein);
