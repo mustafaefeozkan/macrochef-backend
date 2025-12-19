@@ -17,8 +17,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", LocalDateTime.now());
-        response.put("message", ex.getMessage()); // Senin yazdığın "User not found" mesajı
-        response.put("status", HttpStatus.BAD_REQUEST.value()); // 400 Döndürür
+        response.put("message", ex.getMessage());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }

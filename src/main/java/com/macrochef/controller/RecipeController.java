@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/recipes") // DÜZELTME 1: React /api/recipes diye aradığı için burayı güncelledik
+@RequestMapping("/api/recipes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173") // DÜZELTME 2: React'in (5173) buraya erişmesine izin verdik
+
 public class RecipeController {
 
     private final RecipeService recipeService;
