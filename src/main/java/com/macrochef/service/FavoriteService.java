@@ -24,7 +24,7 @@ public class FavoriteService {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not found"));
 
-        // Eğer zaten favorilerde varsa çıkar, yoksa ekle
+
         if (user.getFavorites().contains(recipe)) {
             user.getFavorites().remove(recipe);
         } else {

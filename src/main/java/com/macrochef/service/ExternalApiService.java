@@ -42,7 +42,7 @@ public class ExternalApiService {
             ingredient.setCarbs100g(getDouble(nutriments, "carbohydrates_100g"));
             ingredient.setFat100g(getDouble(nutriments, "fat_100g"));
 
-            // API ID olarak product ID kullanabiliriz
+
             if (product.has("id"))
                 ingredient.setApiId(product.get("id").asText());
 

@@ -1,5 +1,7 @@
 package com.macrochef.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,14 +19,18 @@ public class Recipe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // USER → RECIPE (Many recipes can belong to one user)
+    // USER → RECIPE
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+
+    @JsonIgnoreProperties({"recipes", "favorites", "password", "comments", "roles"})
     private User user;
 
-    // CATEGORY → RECIPE (Many recipes can belong to one category)
+    // CATEGORY → RECIPE
     @ManyToOne
     @JoinColumn(name = "category_id")
+
+    @JsonIgnoreProperties("recipes")
     private Category category;
 
     @Column(nullable = false, length = 200)
@@ -42,9 +48,13 @@ public class Recipe {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RecipeIngredient> ingredients;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("recipe")
+    private List<RecipeIngredient> ingredients;
+
+
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Comment> comments;
 }

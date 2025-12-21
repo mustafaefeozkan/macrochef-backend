@@ -46,7 +46,7 @@ public class CommentService {
     // -------------------------
     public List<Comment> getCommentsByRecipe(Long recipeId) {
 
-        // recipe var mı yok mu kontrolü (temiz API davranışı)
+
         recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("Recipe not found"));
 

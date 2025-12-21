@@ -47,12 +47,12 @@ public class RecipeService {
 
         Recipe savedRecipe = recipeRepository.save(recipe);
 
-        // --- GÜNCELLENEN KISIM ---
+
         if (request.getIngredients() != null && !request.getIngredients().isEmpty()) {
-            // Döngü değişkeni: RecipeIngredientRequest (Yeni oluşturduğumuz sınıf)
+
             for (RecipeIngredientRequest ir : request.getIngredients()) {
 
-                // .getIngredientId() artık hata vermez çünkü RecipeIngredientRequest içinde var
+
                 Ingredient ingredient = ingredientRepository.findById(ir.getIngredientId())
                         .orElseThrow(() -> new RuntimeException("Ingredient not found ID: " + ir.getIngredientId()));
 
@@ -64,7 +64,7 @@ public class RecipeService {
                 recipeIngredientRepository.save(ri);
             }
         }
-        // -------------------------
+
 
         return mapToResponse(savedRecipe);
     }

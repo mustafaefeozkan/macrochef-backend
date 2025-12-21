@@ -1,5 +1,6 @@
 package com.macrochef.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,16 +16,17 @@ public class RecipeIngredient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Many Ingredients belong to one Recipe
+
     @ManyToOne
-    @JoinColumn(name = "recipe_id", nullable = false)
+    @JoinColumn(name = "recipe_id")
+    @JsonIgnore
     private Recipe recipe;
 
-    // Ingredient reference
+
     @ManyToOne
-    @JoinColumn(name = "ingredient_id", nullable = false)
+    @JoinColumn(name = "ingredient_id")
     private Ingredient ingredient;
 
-    @Column(name = "amount_in_grams", nullable = false)
+    @Column(name = "amount_in_grams")
     private Double amountInGrams;
 }

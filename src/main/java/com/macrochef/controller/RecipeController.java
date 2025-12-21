@@ -21,17 +21,13 @@ public class RecipeController {
     private final RecipeService recipeService;
     private final RecipeIngredientService recipeIngredientService;
 
-    // -------------------------
-    // TARİF OLUŞTURMA
-    // -------------------------
+
     @PostMapping
     public ResponseEntity<RecipeResponse> createRecipe(@RequestBody RecipeRequest request) {
         return ResponseEntity.ok(recipeService.createRecipe(request));
     }
 
-    // -------------------------
-    // LİSTELEME
-    // -------------------------
+
     @GetMapping
     public ResponseEntity<List<RecipeResponse>> getAllRecipes() {
         // Konsola yazdıralım ki çalıştığını görelim
@@ -44,9 +40,7 @@ public class RecipeController {
         return ResponseEntity.ok(recipeService.getRecipeResponseById(id));
     }
 
-    // -------------------------
-    // GÜNCELLEME
-    // -------------------------
+
     @PutMapping("/{id}")
     public ResponseEntity<RecipeResponse> updateRecipe(
             @PathVariable Long id,
@@ -55,18 +49,13 @@ public class RecipeController {
         return ResponseEntity.ok(recipeService.updateRecipe(id, request));
     }
 
-    // -------------------------
-    // SİLME
-    // -------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
         recipeService.deleteRecipe(id);
         return ResponseEntity.noContent().build();
     }
 
-    // -------------------------
-    // TARİFE MALZEME EKLEME
-    // -------------------------
+
     @PostMapping("/{recipeId}/ingredients")
     public ResponseEntity<RecipeIngredientResponse> addIngredient(
             @PathVariable Long recipeId,

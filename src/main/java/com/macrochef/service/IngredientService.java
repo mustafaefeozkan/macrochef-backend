@@ -23,7 +23,7 @@ public class IngredientService {
         ing.setCarbs100g(0.0);
         ing.setFat100g(0.0);
 
-        // OpenFoodFacts'tan veri çek
+
         ing = api.fillNutrition(ing);
 
         return repo.save(ing);

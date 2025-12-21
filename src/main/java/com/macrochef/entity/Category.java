@@ -7,8 +7,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "categories")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
@@ -21,7 +20,7 @@ public class Category {
     private String name;
 
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Recipe> recipes;
 }
