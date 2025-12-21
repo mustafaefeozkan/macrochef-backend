@@ -42,6 +42,8 @@ public class SecurityConfig {
                                 "/index.html",
                                 "/api/auth/**",
                                 "/auth/**",
+                                "/api/ingredients/**",
+                                "/api/products/**",
                                 "/api/categories/**",
                                 "/css/**",
                                 "/js/**",
