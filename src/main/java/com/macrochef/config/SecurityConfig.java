@@ -35,16 +35,18 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
                                 "/",
                                 "/index",
+                                "/index.html",
+                                "/api/auth/**",
                                 "/auth/**",
-                                "/ingredients/**",
                                 "/api/categories/**",
-                                "/api/categories",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -59,7 +61,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173","https://macrochef-frontend.vercel.app"));
+
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://macrochef-frontend.vercel.app"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
